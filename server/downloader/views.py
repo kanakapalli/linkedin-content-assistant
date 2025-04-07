@@ -2,8 +2,11 @@ from rest_framework import views, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.shortcuts import get_object_or_404
+
+from downloader.utils.linkedin_downloader import LinkedInDownloader
+
 from .models import LinkedInVideo, VideoMetadata
-from .serializers import LinkedInVideoSerializer, LinkedInVideoCreateSerializer
+from .serializers import LinkedInVideoSerializer, LinkedInVideoCreateSerializer, VideoDownloadURLSerializer
 from .tasks import download_linkedin_video
 from .utils.immediate_metadata import extract_immediate_metadata
 
@@ -87,3 +90,76 @@ class TaskStatusView(views.APIView):
             response["error"] = video.error_message
             
         return Response(response)
+    
+
+class VideoDownloadURLView(views.APIView):
+    """
+    API endpoint for getting a direct download URL for a LinkedIn video
+    - POST: Extract and return a direct downloadable URL for a LinkedIn video post
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        """Get a direct downloadable URL for a LinkedIn video post"""
+        serializer = VideoDownloadURLSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        post_url = serializer.validated_data['url']
+        
+        # Validate that the URL is a LinkedIn post URL
+        if 'linkedin.com/posts/' not in post_url:
+            return Response(
+                {"error": "URL must be a valid LinkedIn post URL"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get optional credentials if provided
+        linkedin_email = serializer.validated_data.get('email', '')
+        linkedin_password = serializer.validated_data.get('password', '')
+        
+        try:
+            # Initialize downloader
+            downloader = LinkedInDownloader(headless=True, timeout=15)
+            
+            # Setup browser
+            if not downloader.setup_driver():
+                return Response(
+                    {"error": "Failed to initialize browser"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+                
+            try:
+                # Login if credentials provided
+                if linkedin_email and linkedin_password:
+                    login_success = downloader.login_to_linkedin(linkedin_email, linkedin_password)
+                    if not login_success:
+                        # Continue without login, but log a warning
+                        pass
+                
+                # Extract video URL
+                video_url = downloader.extract_video_url(post_url)
+                
+                if not video_url:
+                    return Response(
+                        {"error": "Could not extract video URL from the post. The post might not contain a video or might require login."},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+                    
+                return Response({
+                    "downloadable_url": video_url,
+                    "post_url": post_url
+                })
+                
+            finally:
+                # Always close the browser
+                downloader.close()
+                
+        except Exception as e:
+            return Response(
+                {"error": f"Error extracting video URL: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

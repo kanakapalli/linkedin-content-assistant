@@ -84,3 +84,14 @@ class LinkedInVideoCreateSerializer(serializers.ModelSerializer):
         if 'linkedin.com/posts/' not in value:
             raise serializers.ValidationError("URL must be a valid LinkedIn post URL")
         return value
+
+class VideoDownloadURLSerializer(serializers.Serializer):
+    url = serializers.URLField(required=True, help_text="LinkedIn post URL containing a video")
+    email = serializers.EmailField(required=False, allow_blank=True, help_text="LinkedIn account email for accessing private content")
+    password = serializers.CharField(required=False, allow_blank=True, help_text="LinkedIn account password")
+    
+    def validate_url(self, value):
+        """Validate that the URL is a LinkedIn post URL"""
+        if 'linkedin.com/posts/' not in value:
+            raise serializers.ValidationError("URL must be a valid LinkedIn post URL")
+        return value
