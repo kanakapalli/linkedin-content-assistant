@@ -7,7 +7,7 @@ class ApiService {
 
   ApiService(
       {this.baseUrl =
-          'https://api.example.com'}); // Change to your actual API endpoint
+          'https://beloved-selected-krill.ngrok-free.app'}); // Change to your actual API endpoint
 
   // Method to send shared files to your API
   Future<Map<String, dynamic>> sendSharedData(
@@ -124,6 +124,48 @@ class ApiService {
           'Content-Type': 'application/json',
           'Authorization':
               'Bearer YOUR_API_KEY', // Replace with your actual API key
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      // Check if the request was successful
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return {
+          'success': true,
+          'data': jsonDecode(response.body),
+          'statusCode': response.statusCode,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Server returned status code ${response.statusCode}',
+          'message': response.body,
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'error': e.toString(),
+      };
+    }
+  }
+
+  // Method to get video download URL from a LinkedIn post URL
+  Future<Map<String, dynamic>> getVideoDownloadUrl(String postUrl,
+      {String? email, String? password}) async {
+    try {
+      // Prepare the request body
+      final Map<String, dynamic> requestBody = {
+        'url': postUrl,
+        'email': email,
+        'password': password,
+      };
+
+      // Send the POST request
+      final response = await http.post(
+        Uri.parse('$baseUrl/video-download-url'),
+        headers: {
+          'Content-Type': 'application/json',
         },
         body: jsonEncode(requestBody),
       );

@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:receive_sharing_intent_example/models/SharedItem.dart';
+import 'package:receive_sharing_intent_example/screens/CommentGeneratorScreen.dart';
 import 'package:receive_sharing_intent_example/screens/HistoryScreen.dart';
 import 'package:receive_sharing_intent_example/screens/linkedinShareScreen.dart';
 import 'package:receive_sharing_intent_example/services/MetadataExtractor.dart';
 import 'package:receive_sharing_intent_example/services/openAi.dart';
 import 'package:receive_sharing_intent_example/services/share_helper.dart';
 import 'package:receive_sharing_intent_example/services/storage/SharedItemStorage.dart';
+import 'package:receive_sharing_intent_example/utils/extentions.dart';
 import 'package:receive_sharing_intent_example/widgets/UrlPreviewCard.dart';
 
 class MediaSharingScreen extends StatefulWidget {
@@ -223,6 +225,20 @@ class _MediaSharingScreenState extends State<MediaSharingScreen> {
             },
             icon: Icon(Icons.history),
             label: Text("Create New Post"),
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => CommentGeneratorScreen()),
+              );
+            },
+            icon: Icon(Icons.history),
+            label: Text("Comment Generator"),
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
@@ -453,6 +469,52 @@ class _MediaSharingScreenState extends State<MediaSharingScreen> {
                 ),
               ],
             ),
+          ),
+          Row(
+            children: [
+              // Generate Comment button
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CommentGeneratorScreen(),
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.chat_bubble_outline),
+                  label: Text("Generate Comment"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(width: 12),
+
+              // Download Video button
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: Icon(Icons.download),
+                  label: Text("Download Video"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
